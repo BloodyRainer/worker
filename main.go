@@ -10,7 +10,7 @@ import (
 )
 
 const port = 8080
-const workers = 4
+const workers = 10000
 
 func main() {
 	logger := util.GetLogger()
