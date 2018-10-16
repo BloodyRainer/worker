@@ -1,25 +1,27 @@
 package main
 
 import (
+	"fastworker/bottleneck"
 	"fastworker/handlers"
 	"fastworker/util"
-	"fastworker/work"
 	"fmt"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
 
-const port = 8080
-const workers = 10000
+const (
+	port = 8080
+	workers = 2000
+)
 
 func main() {
 	logger := util.GetLogger()
 	defer logger.Sync()
 
-	go work.InitWorkers(workers)
+	bottleneck.Init(workers)
 
-	http.Handle("/", handlers.RootHandler{})
+	http.Handle("/", bottleneck.Apply(handlers.RootHandler{}))
 
 	fmt.Printf("starting server on port %v\n", port)
 	err := http.ListenAndServe(":" + strconv.Itoa(8080), nil)
