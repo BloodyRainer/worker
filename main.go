@@ -4,6 +4,7 @@ import (
 	"fastworker/handlers"
 	"fastworker/util"
 	"fastworker/work"
+	"fmt"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -20,7 +21,7 @@ func main() {
 
 	http.Handle("/", handlers.RootHandler{})
 
-	logger.Info("starting server", zap.Int("port", port))
+	fmt.Printf("starting server on port %v\n", port)
 	err := http.ListenAndServe(":" + strconv.Itoa(8080), nil)
 	if err != nil {
 		logger.Fatal("failed to start server", zap.Error(err))

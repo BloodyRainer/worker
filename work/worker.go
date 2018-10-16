@@ -1,15 +1,10 @@
 package work
 
 import (
-	"bytes"
 	"fastworker/util"
-	"fmt"
 	"go.uber.org/zap"
-	"io"
 	"net/http"
-	"os"
 	"sync"
-	"time"
 )
 
 type Worker struct {
@@ -20,6 +15,7 @@ type Task struct {
 	request        *http.Request
 	responseWriter http.ResponseWriter
 	wait           *sync.WaitGroup
+	do             func(http.ResponseWriter, *http.Request) error
 }
 
 var bouncer chan *Worker
@@ -27,12 +23,13 @@ var tasks chan *Task
 var once sync.Once
 var logger *zap.Logger
 
-func SubmitTask(w http.ResponseWriter, r *http.Request) *sync.WaitGroup{
+func SubmitTask(w http.ResponseWriter, r *http.Request, do func(http.ResponseWriter, *http.Request) error) *sync.WaitGroup {
 
 	t := &Task{
 		request:        r,
 		responseWriter: w,
 		wait:           &sync.WaitGroup{},
+		do:             do,
 	}
 
 	t.wait.Add(1)
@@ -41,20 +38,12 @@ func SubmitTask(w http.ResponseWriter, r *http.Request) *sync.WaitGroup{
 	return t.wait
 }
 
-func (rcv *Worker) do(t *Task) error {
-	buf := new(bytes.Buffer)
-
-	d := 100 * time.Millisecond
-	time.Sleep(d)
-	s := fmt.Sprintf("worker-nr: %v finished some work of %v\n", rcv.id, d)
-	_, err := buf.WriteString(s)
+func (rcv *Worker) work(t *Task) error {
+	err := t.do(t.responseWriter, t.request)
 	if err != nil {
-		return fmt.Errorf("error writing string to buffer: %v", err)
+		return err
 	}
-
-	mw := io.MultiWriter(t.responseWriter, os.Stdout)
-	io.WriteString(mw, buf.String())
-
+	logger.Info("finished work", zap.Int("worker-id", rcv.id))
 	return nil
 }
 
@@ -80,15 +69,13 @@ func InitWorkers(n int) {
 		case worker := <-bouncer:
 
 			go func() {
-
-				err := worker.do(task)
+				err := worker.work(task)
 				if err != nil {
 					logger.Error("error doing work", zap.Error(err))
 				}
 				task.wait.Done()
 
 				go rescheduleWorker(worker)
-
 			}()
 
 		default:
