@@ -1,31 +1,34 @@
 package handlers
 
 import (
-	"fastworker/bottleneck"
 	"net/http"
-	"sync"
+	"net/http/httptest"
+	"strconv"
 	"testing"
 )
 
-type responseWriterMock struct {
-	wg *sync.WaitGroup
-}
-
-func (rcv responseWriterMock) Header() http.Header {
-	return nil
-}
-
-func (rcv responseWriterMock) Write(p []byte) (int, error) {
-	rcv.wg.Done()
-	return len(p), nil
-}
-
-func (rcv responseWriterMock) WriteHeader(int) {}
-
 func TestRootHandler_ServeHTTP(t *testing.T) {
 
-	bottleneck.Init(5)
+	// Arrange
+	req, err := http.NewRequest("GET", "local/", nil)
+	if err != nil {
+		t.Fatalf("could not create request %v", err)
+	}
 
-	const n = 5
+	rec := httptest.NewRecorder()
+	rh := RootHandler{}
+
+	// Act
+	rh.ServeHTTP(rec, req)
+
+	// Assert
+	res := rec.Result()
+	if err != nil {
+		t.Fatalf("could not read response body %v", err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("expected status code %s, got %s\n", strconv.Itoa(http.StatusOK), strconv.Itoa(res.StatusCode))
+	}
 
 }

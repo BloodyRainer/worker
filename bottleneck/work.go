@@ -8,7 +8,7 @@ import (
 )
 
 type Worker struct {
-	id int
+	id int64
 }
 
 type task struct {
@@ -22,21 +22,16 @@ var bouncer chan *Worker
 var tasks chan *task
 var logger *zap.Logger
 
+// Initialize the Bottleneck
 func Init(n int) {
 
+	logger = util.GetLogger()
+	bouncer = make(chan *Worker)
+	tasks = make(chan *task)
+
+	go supplyWorkers(n, bouncer)
+
 	go func() {
-		logger = util.GetLogger()
-		bouncer = make(chan *Worker)
-		tasks = make(chan *task)
-
-		go func() {
-			for i := 0; i < n; i++ {
-				bouncer <- &Worker{
-					id: i,
-				}
-			}
-		}()
-
 		for {
 
 			task := <-tasks
@@ -46,7 +41,6 @@ func Init(n int) {
 
 				go func() {
 					worker.do(task)
-
 					go rescheduleWorker(worker)
 				}()
 
@@ -60,6 +54,7 @@ func Init(n int) {
 
 }
 
+// Apply the Bottleneck to the Handler
 func Apply(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		waitGrp := new(sync.WaitGroup)
@@ -79,8 +74,16 @@ func Apply(next http.Handler) http.Handler {
 
 func (rcv *Worker) do(t *task) {
 	t.handler.ServeHTTP(t.rw, t.req)
-	logger.Info("finished work", zap.Int("worker-id", rcv.id))
+	logger.Info("finished work", zap.Int64("worker-id", rcv.id))
 	t.wg.Done()
+}
+
+func supplyWorkers(n int, bouncer chan<- *Worker) {
+	for i := 0; i < n; i++ {
+		bouncer <- &Worker{
+			id: int64(i),
+		}
+	}
 }
 
 func rescheduleWorker(w *Worker) {

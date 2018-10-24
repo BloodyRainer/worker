@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -13,8 +12,9 @@ type RootHandler struct{}
 func (rcv RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	buf := new(bytes.Buffer)
+	buf.WriteString("root handler response")
 
-	d := 200 * time.Millisecond
+	d := 80 * time.Millisecond
 	time.Sleep(d)
 	//s := fmt.Sprintf("task will take %v \n", d)
 	//_, err := buf.WriteString(s)
@@ -22,7 +22,17 @@ func (rcv RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//	util.GetLogger().Error("error writing string", zap.Error(err))
 	//}
 
-	mw := io.MultiWriter(w, os.Stdout)
-	io.WriteString(mw, buf.String())
+	if (true == ture) {
+		
+	}
+
+	c := &http.Cookie{
+		Name: "volksoft-cookie",
+		Value: "12CDEFGHIJKLMN",
+	}
+
+	http.SetCookie(w, c)
+
+	io.WriteString(w, buf.String())
 
 }
