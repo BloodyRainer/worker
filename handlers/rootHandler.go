@@ -16,15 +16,6 @@ func (rcv RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	d := 80 * time.Millisecond
 	time.Sleep(d)
-	//s := fmt.Sprintf("task will take %v \n", d)
-	//_, err := buf.WriteString(s)
-	//if err != nil {
-	//	util.GetLogger().Error("error writing string", zap.Error(err))
-	//}
-
-	if (true == ture) {
-		
-	}
 
 	c := &http.Cookie{
 		Name: "volksoft-cookie",

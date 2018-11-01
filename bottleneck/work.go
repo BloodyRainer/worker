@@ -18,15 +18,17 @@ type task struct {
 	req     *http.Request
 }
 
-var bouncer chan *Worker
-var tasks chan *task
-var logger *zap.Logger
+var (
+	bouncer chan *Worker
+	tasks chan *task
+	logger *zap.Logger
+)
 
 // Initialize the Bottleneck
 func Init(n int) {
 
 	logger = util.GetLogger()
-	bouncer = make(chan *Worker)
+	bouncer = make(chan *Worker, n)
 	tasks = make(chan *task)
 
 	go supplyWorkers(n, bouncer)

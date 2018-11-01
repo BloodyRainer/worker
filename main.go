@@ -12,7 +12,7 @@ import (
 
 const (
 	port = 8080
-	workers = 1000
+	workers = 400
 )
 
 func main() {
