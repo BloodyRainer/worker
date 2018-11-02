@@ -31,10 +31,9 @@ var (
 
 const (
 	defaultWorkers = 1000
-	gracePeriodeMs = 5000
+	gracePeriodMs  = 5000
 )
 
-// Initialize the Bottleneck
 func initBottleneck(n int) {
 
 	logger = util.GetLogger()
@@ -67,7 +66,7 @@ func initBottleneck(n int) {
 
 					go rescheduleWorker(wo)
 				}(w)
-			
+
 			case <-time.After(1 * time.Second):
 				if stop {
 					logger.Debug("closing bouncer after 5 seconds")
@@ -119,7 +118,7 @@ func supplyWorkers(n int, bouncer chan<- *worker) {
 			break
 		}
 		tries++
-		time.Sleep(time.Duration(gracePeriodeMs / 5) * time.Millisecond)
+		time.Sleep(time.Duration(gracePeriodMs/ 5) * time.Millisecond)
 	}
 	logger.Debug("bottleneck stopped doing work")
 
@@ -151,6 +150,7 @@ func ApplyNumWorkers(numWorkers int, httpHandler http.Handler) http.Handler {
 	})
 }
 
+// Logs the number of busy workers with the given time frequency.
 func LogBusyWorkers(frequency time.Duration) {
 
 	go func() {
@@ -161,6 +161,7 @@ func LogBusyWorkers(frequency time.Duration) {
 
 }
 
+// Notify the Bottleneck to stop doing work gracefully.
 func NotifyStop() chan<- bool {
 	return stopNotify
 }
