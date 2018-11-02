@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"io"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -14,11 +15,11 @@ func (rcv RootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	buf := new(bytes.Buffer)
 	buf.WriteString("root handler response")
 
-	d := 80 * time.Millisecond
+	d := time.Duration(rand.Intn(100)) * time.Millisecond
 	time.Sleep(d)
 
 	c := &http.Cookie{
-		Name: "volksoft-cookie",
+		Name: "bloody-cookie",
 		Value: "12CDEFGHIJKLMN",
 	}
 

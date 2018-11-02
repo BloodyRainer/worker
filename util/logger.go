@@ -16,10 +16,13 @@ var once sync.Once
 func GetLogger() *zap.Logger {
 	once.Do(func() {
 		var err error
+		var lvl zapcore.Level
+
+		lvl.Set("debug")
 
 		cfg := zap.Config{
 			Encoding: "json",
-			Level: zap.NewAtomicLevelAt(zapcore.DebugLevel),
+			Level: zap.NewAtomicLevelAt(lvl),
 			OutputPaths: []string{"stdout"},
 			EncoderConfig: zapcore.EncoderConfig{
 				MessageKey: "message",
